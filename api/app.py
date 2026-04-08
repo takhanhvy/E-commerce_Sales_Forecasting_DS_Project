@@ -90,8 +90,8 @@ def health() -> Any:
         "status": "ok"
         if supervised_model is not None and cluster_model is not None
         else "error",
-        "supervised_loaded": supervised_model is not None,
-        "supervised_error": supervised_error,
+        "regression_loaded": supervised_model is not None,
+        "regression_error": supervised_error,
         "cluster_loaded": cluster_model is not None,
         "cluster_error": cluster_error,
     }

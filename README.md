@@ -1,6 +1,6 @@
 # Projet Data Science - Prévision des ventes e-commerce
 
-Projet complet de Data Science basé sur le dataset Amazon Sale Report  
+Projet complet de Data Science basé sur le dataset Amazon Sale Report.
 Objectif : prédire `Amount` (montant des ventes) avec un modèle supervisé (Ridge Regression) et produire un clustering non supervisé.
 
 ## Jeu de données
@@ -17,6 +17,7 @@ Objectif : prédire `Amount` (montant des ventes) avec un modèle supervisé (Ri
 - `data/raw/` données locales (CSV)
 - `artifacts/` modèles et sorties
 - `reports/` métriques et pipeline (créé après entraînement)
+- `test/` tests unitaires
 
 ## Dataset (local)
 Placer le fichier CSV ici :
@@ -74,6 +75,12 @@ Tester le clustering (non supervisé) :
 curl -X POST http://127.0.0.1:5000/predict_cluster \
   -H "Content-Type: application/json" \
   -d '{"Date":"2023-01-01","Qty":2,"Category":"A","Sales Channel":"Online","Status":"Shipped"}'
+```
+
+## Tests
+Exécuter les tests API :
+```bash
+python test/test_api.py
 ```
 
 ## Métriques et analyse business

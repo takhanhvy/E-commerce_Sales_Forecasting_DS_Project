@@ -1,4 +1,10 @@
+import sys
 import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from api.app import app
 
@@ -13,7 +19,8 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.get_json()
         self.assertIn("status", data)
-        self.assertIn("model_loaded", data)
+        self.assertIn("regression_loaded", data)
+        self.assertIn("cluster_loaded", data)
 
     def test_predict_regression(self):
         payload = {
