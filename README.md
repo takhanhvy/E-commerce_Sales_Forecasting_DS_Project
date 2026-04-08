@@ -1,7 +1,9 @@
 # Projet Data Science - Prévision des ventes e-commerce
 
-Projet complet de Data Science basé sur le dataset Amazon Sale Report.
-Objectif : prédire `Amount` (montant des ventes) avec un modèle supervisé (Ridge Regression) et produire un clustering non supervisé.
+Projet complet de Data Science basé sur le dataset Amazon Sale Report.  
+Objectif : prédire `Amount` (montant des ventes) avec un modèle supervisé (Ridge Regression) et produire un clustering non supervisé.  
+
+Réalisé par : TA Khanh Vy, MADOUNGOU Colombe Alice
 
 ## Jeu de données
 - **Nom** : Amazon Sale Report
