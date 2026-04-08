@@ -1,0 +1,9 @@
+{
+  "rows_used_sample": 5000,
+  "best_k": 2,
+  "silhouette_score": 0.1310181211875125,
+  "cluster_distribution": {
+    "0": 2712,
+    "1": 2288
+  }
+}
