@@ -43,6 +43,7 @@ def time_based_split(df, date_col: str, test_size: float):
 
 def main() -> None:
     """Pipeline complet: load -> split -> train -> eval -> save."""
+    # Chargement du dataset local.
     df = load_dataset()
 
     if TARGET_COL_DEFAULT not in df.columns:
@@ -50,7 +51,7 @@ def main() -> None:
             f"Target column '{TARGET_COL_DEFAULT}' not found in dataset."
         )
 
-    # Securise la cible: numerique + suppression des NaN.
+    # Securise la cible: conversion numerique + suppression des NaN.
     df[TARGET_COL_DEFAULT] = pd.to_numeric(df[TARGET_COL_DEFAULT], errors="coerce")
     before_rows = len(df)
     df = df.dropna(subset=[TARGET_COL_DEFAULT])
@@ -60,10 +61,11 @@ def main() -> None:
     if len(df) == 0:
         raise ValueError("All rows have missing target values after cleaning.")
 
-    # Split temporel si la colonne date est presente.
+    # Split temporel si la colonne date est presente (evite la fuite temporelle).
     if DATE_COL_DEFAULT in df.columns:
         train_df, test_df = time_based_split(df, DATE_COL_DEFAULT, TEST_SIZE)
     else:
+        # Sinon split aleatoire classique.
         train_df, test_df = train_test_split(
             df, test_size=TEST_SIZE, random_state=RANDOM_STATE
         )

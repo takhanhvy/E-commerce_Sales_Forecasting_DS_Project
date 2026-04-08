@@ -7,11 +7,13 @@ from typing import Optional
 
 import pandas as pd
 
+# Chemin par defaut du fichier CSV local.
 DEFAULT_DATA_PATH = Path("data/raw/Amazon Sale Report.csv")
 
 
 def load_dataset(path: Optional[str] = None) -> pd.DataFrame:
     """Charge le CSV local depuis data/raw/."""
+    # Si aucun chemin n'est fourni, on utilise le chemin standard du projet.
     data_path = Path(path) if path else DEFAULT_DATA_PATH
     if data_path.exists():
         return pd.read_csv(data_path)

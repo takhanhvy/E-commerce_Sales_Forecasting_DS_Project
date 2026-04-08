@@ -16,9 +16,11 @@ except ImportError:  # pragma: no cover
 import pandas as pd
 from flask import Flask, jsonify, request
 
+# Racine du projet (pour importer src/ et trouver les modeles).
 APP_ROOT = Path(__file__).resolve().parents[1]
 if str(APP_ROOT) not in sys.path:
     sys.path.insert(0, str(APP_ROOT))
+# Chemins des modeles (modifiables via variables d'environnement).
 SUPERVISED_MODEL_PATH = os.environ.get(
     "MODEL_PATH", str(APP_ROOT / "artifacts" / "regression_model.pkl")
 )
@@ -44,6 +46,7 @@ def load_model_bundle(path: str):
 
 
 try:
+    # Chargement du modele supervise.
     supervised_model, supervised_bundle = load_model_bundle(SUPERVISED_MODEL_PATH)
     supervised_feature_columns = supervised_bundle.get("feature_columns")
 except Exception as exc:  # pylint: disable=broad-except
@@ -54,6 +57,7 @@ else:
     supervised_error = None
 
 try:
+    # Chargement du modele de clustering.
     cluster_model, cluster_bundle = load_model_bundle(UNSUPERVISED_MODEL_PATH)
     cluster_feature_columns = cluster_bundle.get("feature_columns")
 except Exception as exc:  # pylint: disable=broad-except
@@ -117,8 +121,10 @@ def predict_regression() -> Any:
         )
 
     try:
+        # Le payload peut etre un dict ou une liste de dicts.
         payload = request.get_json(force=True)
         records = normalize_payload(payload)
+        # Aligne les colonnes avec celles du modele.
         df = build_dataframe(records, supervised_feature_columns)
         preds = supervised_model.predict(df)
         return jsonify({"predictions": [float(p) for p in preds]})
@@ -136,8 +142,10 @@ def predict_cluster() -> Any:
         )
 
     try:
+        # Le payload peut etre un dict ou une liste de dicts.
         payload = request.get_json(force=True)
         records = normalize_payload(payload)
+        # Aligne les colonnes avec celles du modele.
         df = build_dataframe(records, cluster_feature_columns)
         labels = cluster_model.predict(df)
         return jsonify({"clusters": [int(l) for l in labels]})

@@ -15,6 +15,7 @@ from api.app import app
 class ApiTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        # Client de test Flask.
         cls.client = app.test_client()
 
     def test_health(self):

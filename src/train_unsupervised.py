@@ -44,6 +44,7 @@ def choose_k(X_transformed, random_state: int) -> tuple[int, float]:
 
 def main() -> None:
     """Pipeline complet: load -> preprocess -> cluster -> save."""
+    # Chargement du dataset local.
     df = load_dataset()
 
     # En non supervise, on retire la cible si elle existe.

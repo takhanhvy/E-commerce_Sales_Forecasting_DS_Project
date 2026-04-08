@@ -17,6 +17,7 @@ TARGET_COL_DEFAULT = "Amount"
 
 @dataclass
 class FeatureSpec:
+    """Structure des colonnes utiles pour l'entrainement."""
     feature_columns: List[str]
     numeric_features: List[str]
     categorical_features: List[str]
@@ -28,11 +29,14 @@ def add_date_features(df: pd.DataFrame, date_col: str) -> pd.DataFrame:
     if date_col not in df.columns:
         return df
     df = df.copy()
+    # Conversion robuste de la date (invalides -> NaT).
     df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+    # Features calendaires simples.
     df["date_year"] = df[date_col].dt.year
     df["date_month"] = df[date_col].dt.month
     df["date_day"] = df[date_col].dt.day
     df["date_dayofweek"] = df[date_col].dt.dayofweek
+    # On retire la colonne date brute pour eviter le leakage direct.
     df = df.drop(columns=[date_col])
     return df
 
@@ -44,12 +48,14 @@ def split_features_target(
 ) -> Tuple[pd.DataFrame, Optional[pd.Series], FeatureSpec]:
     """Separe X et y, puis detecte les colonnes numeriques et categorielles."""
     df = add_date_features(df, date_col)
+    # Separer la cible du reste des features.
     if target_col in df.columns:
         y = df[target_col]
         X = df.drop(columns=[target_col])
     else:
         y = None
         X = df
+    # Detection auto des types pour le preprocessing.
     numeric_features = X.select_dtypes(include=["number"]).columns.tolist()
     categorical_features = [c for c in X.columns if c not in numeric_features]
     date_features = [
