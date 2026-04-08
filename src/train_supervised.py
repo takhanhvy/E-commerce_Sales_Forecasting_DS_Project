@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Entrainement du modele supervise (regression sur Amount)."""
+
 import json
 from pathlib import Path
 
@@ -24,12 +26,14 @@ TEST_SIZE = 0.2
 
 
 def save_pipeline_visuals(pipeline, txt_path: str) -> None:
+    """Sauvegarde une representation texte du pipeline."""
     path_txt = Path(txt_path)
     path_txt.parent.mkdir(parents=True, exist_ok=True)
     path_txt.write_text(str(pipeline))
 
 
 def time_based_split(df, date_col: str, test_size: float):
+    """Split temporel pour eviter la fuite d'information."""
     df = df.sort_values(date_col)
     split_idx = int(len(df) * (1 - test_size))
     train_df = df.iloc[:split_idx]
@@ -38,6 +42,7 @@ def time_based_split(df, date_col: str, test_size: float):
 
 
 def main() -> None:
+    """Pipeline complet: load -> split -> train -> eval -> save."""
     df = load_dataset()
 
     if TARGET_COL_DEFAULT not in df.columns:
@@ -45,7 +50,7 @@ def main() -> None:
             f"Target column '{TARGET_COL_DEFAULT}' not found in dataset."
         )
 
-    # Ensure target is numeric and drop rows with missing target
+    # Securise la cible: numerique + suppression des NaN.
     df[TARGET_COL_DEFAULT] = pd.to_numeric(df[TARGET_COL_DEFAULT], errors="coerce")
     before_rows = len(df)
     df = df.dropna(subset=[TARGET_COL_DEFAULT])
@@ -55,6 +60,7 @@ def main() -> None:
     if len(df) == 0:
         raise ValueError("All rows have missing target values after cleaning.")
 
+    # Split temporel si la colonne date est presente.
     if DATE_COL_DEFAULT in df.columns:
         train_df, test_df = time_based_split(df, DATE_COL_DEFAULT, TEST_SIZE)
     else:
@@ -65,18 +71,23 @@ def main() -> None:
     X_train, y_train, spec = split_features_target(train_df)
     X_test, y_test, _ = split_features_target(test_df)
 
+    # Preprocessing: imputation + encodage.
     preprocessor = build_preprocessor(spec)
 
+    # Baseline simple pour comparer les performances.
     baseline = DummyRegressor(strategy="mean")
     baseline.fit(X_train, y_train)
     baseline_pred = baseline.predict(X_test)
 
+    # Modele principal: regression lineaire regularisee.
     model = Ridge(alpha=1.0)
 
+    # Pipeline complet pour entrainement et inference.
     pipeline = Pipeline(steps=[("preprocess", preprocessor), ("model", model)])
     pipeline.fit(X_train, y_train)
     preds = pipeline.predict(X_test)
 
+    # Sauvegarde d'une vue texte du pipeline.
     save_pipeline_visuals(pipeline, txt_path="reports/regression_supervised.txt")
 
     metrics = {
@@ -94,6 +105,7 @@ def main() -> None:
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
     metrics_path.write_text(json.dumps(metrics, indent=2))
 
+    # Bundle pour reutilisation par l'API.
     bundle = {
         "model": pipeline,
         "feature_columns": spec.feature_columns,
@@ -103,6 +115,7 @@ def main() -> None:
         "date_col": DATE_COL_DEFAULT,
     }
 
+    # Sauvegarde et verification de reload.
     Path(MODEL_OUTPUT_PATH).parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(bundle, MODEL_OUTPUT_PATH)
     reloaded = joblib.load(MODEL_OUTPUT_PATH)

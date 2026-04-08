@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""API Flask: regression + clustering."""
+
 import os
 import pickle
 import sys
@@ -28,6 +30,7 @@ app = Flask(__name__)
 
 
 def load_bundle(path: str):
+    """Charge un pickle via joblib si dispo, sinon pickle standard."""
     if joblib is not None:
         return joblib.load(path)
     with open(path, "rb") as f:
@@ -35,6 +38,7 @@ def load_bundle(path: str):
 
 
 def load_model_bundle(path: str):
+    """Retourne (modele, bundle) pour simplifier la logique."""
     bundle = load_bundle(path)
     return bundle.get("model"), bundle
 
@@ -61,6 +65,7 @@ else:
 
 
 def normalize_payload(payload: Any) -> List[Dict[str, Any]]:
+    """Normalise le payload en liste de dicts."""
     if isinstance(payload, dict):
         return [payload]
     if isinstance(payload, list):
@@ -75,6 +80,7 @@ def normalize_payload(payload: Any) -> List[Dict[str, Any]]:
 def build_dataframe(
     records: List[Dict[str, Any]], feature_columns: List[str] | None
 ) -> pd.DataFrame:
+    """Construit un DataFrame en alignant les colonnes du modele."""
     df = pd.DataFrame(records)
     if feature_columns:
         for col in feature_columns:
@@ -86,6 +92,7 @@ def build_dataframe(
 
 @app.route("/health", methods=["GET"])
 def health() -> Any:
+    """Etat des modeles charges."""
     status = {
         "status": "ok"
         if supervised_model is not None and cluster_model is not None
@@ -100,6 +107,7 @@ def health() -> Any:
 
 @app.route("/predict_regression", methods=["POST"])
 def predict_regression() -> Any:
+    """Endpoint regression: retourne une liste de predictions."""
     if supervised_model is None:
         return (
             jsonify(
@@ -120,6 +128,7 @@ def predict_regression() -> Any:
 
 @app.route("/predict_cluster", methods=["POST"])
 def predict_cluster() -> Any:
+    """Endpoint clustering: retourne les labels de clusters."""
     if cluster_model is None:
         return (
             jsonify({"error": "Cluster model not loaded", "details": cluster_error}),

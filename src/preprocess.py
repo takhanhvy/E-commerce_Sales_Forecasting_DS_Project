@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Preprocessing et preparation des features."""
+
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
@@ -22,6 +24,7 @@ class FeatureSpec:
 
 
 def add_date_features(df: pd.DataFrame, date_col: str) -> pd.DataFrame:
+    """Ajoute des features temporelles puis supprime la colonne date brute."""
     if date_col not in df.columns:
         return df
     df = df.copy()
@@ -39,6 +42,7 @@ def split_features_target(
     target_col: str = TARGET_COL_DEFAULT,
     date_col: str = DATE_COL_DEFAULT,
 ) -> Tuple[pd.DataFrame, Optional[pd.Series], FeatureSpec]:
+    """Separe X et y, puis detecte les colonnes numeriques et categorielles."""
     df = add_date_features(df, date_col)
     if target_col in df.columns:
         y = df[target_col]
@@ -63,6 +67,7 @@ def split_features_target(
 
 
 def _build_onehot_encoder() -> OneHotEncoder:
+    """Construit un OneHotEncoder compatible avec plusieurs versions sklearn."""
     try:
         return OneHotEncoder(
             handle_unknown="ignore",
@@ -77,9 +82,11 @@ def _build_onehot_encoder() -> OneHotEncoder:
 
 
 def build_preprocessor(spec: FeatureSpec) -> ColumnTransformer:
+    """Construit un ColumnTransformer pour numeriques + categorielles."""
     transformers = []
 
     if spec.numeric_features:
+        # StandardScaler(with_mean=False) pour conserver le format sparse.
         numeric_pipeline = Pipeline(
             steps=[
                 ("imputer", SimpleImputer(strategy="median")),
@@ -89,6 +96,7 @@ def build_preprocessor(spec: FeatureSpec) -> ColumnTransformer:
         transformers.append(("num", numeric_pipeline, spec.numeric_features))
 
     if spec.categorical_features:
+        # One-hot sparse pour limiter la memoire.
         encoder = _build_onehot_encoder()
         categorical_pipeline = Pipeline(
             steps=[
@@ -101,4 +109,5 @@ def build_preprocessor(spec: FeatureSpec) -> ColumnTransformer:
     if not transformers:
         raise ValueError("No usable features found for preprocessing.")
 
+    # sparse_threshold=0.0 pour eviter conversion en dense.
     return ColumnTransformer(transformers=transformers, remainder="drop", sparse_threshold=0.0)

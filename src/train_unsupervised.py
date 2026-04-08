@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Entrainement du modele non supervise (clustering)."""
+
 from collections import Counter
 import json
 from pathlib import Path
@@ -20,12 +22,14 @@ MAX_SAMPLE = 5000
 
 
 def save_pipeline_visuals(pipeline, txt_path: str) -> None:
+    """Sauvegarde une representation texte du pipeline."""
     path_txt = Path(txt_path)
     path_txt.parent.mkdir(parents=True, exist_ok=True)
     path_txt.write_text(str(pipeline))
 
 
 def choose_k(X_transformed, random_state: int) -> tuple[int, float]:
+    """Choisit k via silhouette sur un echantillon."""
     best_k = 3
     best_score = -1.0
     for k in range(2, 7):
@@ -39,14 +43,18 @@ def choose_k(X_transformed, random_state: int) -> tuple[int, float]:
 
 
 def main() -> None:
+    """Pipeline complet: load -> preprocess -> cluster -> save."""
     df = load_dataset()
 
+    # En non supervise, on retire la cible si elle existe.
     if TARGET_COL_DEFAULT in df.columns:
         df = df.drop(columns=[TARGET_COL_DEFAULT])
 
     X, _, spec = split_features_target(df, target_col=TARGET_COL_DEFAULT)
+    # Preprocessing pour clustering.
     preprocessor = build_preprocessor(spec)
 
+    # Echantillonnage pour choisir k rapidement.
     if len(X) > MAX_SAMPLE:
         X_sample = X.sample(MAX_SAMPLE, random_state=RANDOM_STATE)
     else:
@@ -55,6 +63,7 @@ def main() -> None:
     X_transformed = preprocessor.fit_transform(X_sample)
     best_k, best_score = choose_k(X_transformed, RANDOM_STATE)
 
+    # Pipeline final avec MiniBatchKMeans.
     pipeline = Pipeline(
         steps=[
             ("preprocess", preprocessor),
@@ -65,8 +74,10 @@ def main() -> None:
     sample_labels = pipeline.predict(X_sample)
     cluster_counts = Counter(sample_labels)
 
+    # Sauvegarde d'une vue texte du pipeline.
     save_pipeline_visuals(pipeline, txt_path="reports/pipeline_cluster.txt")
 
+    # Sauvegarde et verification de reload.
     output_path = Path(MODEL_OUTPUT_PATH)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(
